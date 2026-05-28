@@ -1,0 +1,31 @@
+name: Deploy Website to Amazon S3
+
+# El workflow se ejecuta en cada push a la rama main
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Subir a S3
+    runs-on: ubuntu-latest # Utiliza Ubuntu latest
+
+    steps:
+      # Paso 1: Clonar el código del repositorio en el runner
+      - name: Checkout del código
+        uses: actions/checkout@v3
+
+      # Paso 2: Configurar las credenciales de AWS usando los Secrets
+      - name: Configurar credenciales de AWS
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Paso 3: Sincronizar (subir) los archivos al bucket S3
+      - name: Deploy a Amazon S3
+        run: |
+          # Usamos aws s3 sync para subir todo excepto la carpeta .github
+          aws s3 sync . s3://${{ secrets.S3_BUCKET }} --exclude ".git/*" --exclude ".github/*"
